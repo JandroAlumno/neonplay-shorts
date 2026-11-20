@@ -2,7 +2,7 @@
 
 Entrada (en el directorio de trabajo): scenes.py con VOICE (una frase por escena, 9 en total:
 8 escenas + la escena final con el avatar) y music2.wav. Opcionales en scenes.py:
-VOICE_NAME (ef_dora, em_alex, em_santa) y VOICE_SPEED (1.05 por defecto).
+VOICE_NAME (em_alex, em_santa) y VOICE_SPEED (1.05 por defecto).
 Salida: final.wav (música con ducking + voz).
 """
 import os, sys, wave
@@ -16,8 +16,8 @@ import scenes as S
 VOICE = list(getattr(S, "VOICE", []))
 if len(VOICE) != N_SCENES:
     sys.exit(f"ERROR: scenes.py necesita VOICE con {N_SCENES} frases (una por escena, la última para el cierre); tiene {len(VOICE)}")
-NAME = getattr(S, "VOICE_NAME", "ef_dora")
-BASE = float(getattr(S, "VOICE_SPEED", 1.05))
+NAME = getattr(S, "VOICE_NAME", "em_alex")
+BASE = float(getattr(S, "VOICE_SPEED", 1.35))
 D = os.environ.get("KOKORO_DIR", os.path.expanduser("~/.cache/neonplay"))
 
 from kokoro_onnx import Kokoro
