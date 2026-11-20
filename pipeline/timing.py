@@ -1,10 +1,10 @@
 BPM = 140
 BEAT = 60 / BPM
 BEATS_PER_SCENE = 8
-N_SCENES = 8
+N_SCENES = 9  # 8 escenas + cierre con avatar
 TAIL_BEATS = 3
 TOTAL_BEATS = BEATS_PER_SCENE * N_SCENES + TAIL_BEATS
 TOTAL = TOTAL_BEATS * BEAT
 SR = 44100
 FPS = 30
-BIG = {0, 4, 7}  # scenes with bigger hits
+BIG = {0, 4, 7, 8}  # scenes with bigger hits

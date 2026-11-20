@@ -24,7 +24,31 @@ def make_el(txt, font, col, glow=True):
     d.text(pos, txt, font=font, fill=col)
     return im, bb[3] - bb[1]
 
+def build_outro():
+    av = Image.open("assets/avatar.png").convert("RGBA").resize((560, 560))
+    mask = Image.new("L", (560, 560), 0); ImageDraw.Draw(mask).ellipse([0, 0, 559, 559], fill=255)
+    pad = 90; size = 560 + pad * 2
+    im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    ring = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    ImageDraw.Draw(ring).ellipse([pad - 22, pad - 22, pad + 582, pad + 582], fill=r1.PINK + (255,))
+    glow = ring.filter(ImageFilter.GaussianBlur(26)); im.alpha_composite(glow); im.alpha_composite(ring)
+    im.paste(av, (pad, pad), mask)
+    t1, _ = make_el("SÍGUEME", ImageFont.truetype(FB, 190), r1.WHITE)
+    t2, _ = make_el("@neonplaycanal", ImageFont.truetype(FB, 84), r1.PINK)
+    subim, _ = make_el("noticias y trucos gamer cada día", ImageFont.truetype(FX, 54), (255, 255, 255), glow=False)
+    y0, y1 = 280, 1480
+    plate = Image.new("RGBA", (W - 80, y1 - y0), (0, 0, 0, 0))
+    ImageDraw.Draw(plate).rounded_rectangle([0, 0, plate.width - 1, plate.height - 1], radius=50, fill=(8, 2, 20, 175))
+    lf = ImageFont.truetype(FX, 46); lw = ImageDraw.Draw(Image.new("RGBA", (1, 1))).textlength("NO TE LO PIERDAS", font=lf)
+    pill = Image.new("RGBA", (int(lw + 68), 80), (0, 0, 0, 0)); pd = ImageDraw.Draw(pill)
+    pd.rounded_rectangle([0, 0, pill.width - 1, 79], radius=40, fill=r1.PINK)
+    pd.text((pill.width / 2, 40), "NO TE LO PIERDAS", font=lf, fill=r1.WHITE, anchor="mm")
+    return [(plate, W / 2, (y0 + y1) / 2, -0.01, "plate"), (pill, W / 2, y0, 0, "drop"),
+            (im, W / 2, 700, 0, "pop"), (t1, W / 2, 1140, 1, "pop"), (t2, W / 2, 1290, 2, "pop"), (subim, W / 2, 1400, 3, "rise")]
+
 def build(scene):
+    if scene is None:
+        return build_outro()
     dur, label, lines, sub = scene
     d0 = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
     items = []
@@ -130,8 +154,8 @@ def scene_bounds(i):
 if __name__ == "__main__":
     if sys.argv[1] == "test":
         outs = []
-        for i, t in [(0, 0.05), (0, 1.4), (3, 0.6), (6, 3.3)]:
-            els = build(SCENES[i]); st, _ = scene_bounds(i)
+        for i, t in [(0, 0.05), (0, 1.4), (6, 3.3), (8, 2.2)]:
+            els = build((SCENES + [None])[i]); st, _ = scene_bounds(i)
             outs.append(Image.fromarray(frame(i, els, t, st + t)).resize((540, 960)))
         g = Image.new("RGB", (2160, 960)); [g.paste(o, (k * 540, 0)) for k, o in enumerate(outs)]; g.save("test2.jpg", quality=85)
     else:
@@ -139,7 +163,7 @@ if __name__ == "__main__":
         for i in range(N_SCENES):
             st, en = scene_bounds(i)
             f1 = round(en * FPS); nfr = f1 - f0
-            els = build(SCENES[i]); tmp = f"p2_{i}.tmp.mp4"
+            els = build((SCENES + [None])[i]); tmp = f"p2_{i}.tmp.mp4"
             p = subprocess.Popen(["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
                                   "-c:v", "libx264", "-crf", "20", "-preset", "veryfast", "-pix_fmt", "yuv420p", tmp], stdin=subprocess.PIPE)
             for k in range(nfr):
