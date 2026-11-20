@@ -2,7 +2,7 @@
 
 Entrada (en el directorio de trabajo): scenes.py con VOICE (una frase por escena, 9 en total:
 8 escenas + la escena final con el avatar) y music2.wav. Opcionales en scenes.py:
-VOICE_NAME (em_alex, em_santa) y VOICE_SPEED (1.05 por defecto).
+VOICE_NAME (em_alex, ef_dora, em_santa) y VOICE_SPEED (1.05 por defecto).
 Salida: final.wav (música con ducking + voz).
 """
 import os, sys, wave

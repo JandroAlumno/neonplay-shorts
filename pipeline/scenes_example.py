@@ -1,7 +1,7 @@
 WHITE=(255,255,255); PINK=(255,79,163); ORANGE=(255,160,60); CYAN=(70,230,255); YEL=(255,225,80); LIME=(160,255,120)
 CHORDS = [(57,60,64),(53,57,60),(48,52,55),(55,59,62)]
 SEED = 5
-VOICE_NAME = "em_alex"  # voces masculinas: alternar em_alex y em_santa
+VOICE_NAME = "em_alex"  # rotar: em_alex (hombre), ef_dora (mujer), em_santa (hombre)
 VOICE_SPEED = 1.35
 SCENES = [
     (3.4, "ATENCIÓN", [("GTA 6", 230, CYAN), ("¿CUÁNTO", 130, WHITE), ("CUESTA?", 190, YEL)], "precios oficiales de lanzamiento"),
