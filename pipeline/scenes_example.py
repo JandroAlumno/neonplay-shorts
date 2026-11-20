@@ -1,3 +1,4 @@
+THEME = "synthwave"  # synthwave|ocean|lava|matrix|candy|midnight (cambiar en cada vídeo)
 WHITE=(255,255,255); PINK=(255,79,163); ORANGE=(255,160,60); CYAN=(70,230,255); YEL=(255,225,80); LIME=(160,255,120)
 CHORDS = [(57,60,64),(53,57,60),(48,52,55),(55,59,62)]
 SEED = 5

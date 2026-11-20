@@ -1,10 +1,12 @@
 import sys, math, subprocess, os
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
+import themes
+T = themes.get()
 
 W, H, FPS = 1080, 1920, 30
-FB = "/usr/share/fonts/opentype/inter/Inter-Black.otf"
-FX = "/usr/share/fonts/opentype/inter/Inter-ExtraBold.otf"
+FB = T["fb"]
+FX = T["fx"]
 WHITE = (255, 255, 255); PINK = (255, 79, 163); ORANGE = (255, 160, 60); CYAN = (70, 230, 255); YEL = (255, 225, 80)
 
 # (duration, label, [(text, size, color)], sub)
@@ -22,24 +24,25 @@ TOTAL = sum(s[0] for s in SCENES)
 
 def base_bg():
     y = np.linspace(0, 1, H)[:, None]
-    top = np.array([14, 6, 30]); mid = np.array([70, 14, 90]); hor = np.array([255, 90, 120])
+    top = np.array(T["top"]); mid = np.array(T["mid"]); hor = np.array(T["hor"])
     hy = 0.62
     a = np.clip(y / hy, 0, 1)
     col = np.where(y < hy, top + (mid - top) * a ** 1.4, 0)
     col = col + np.where(y < hy, (hor - mid) * np.clip((y - 0.45) / (hy - 0.45), 0, 1) ** 2, 0)
-    ground = np.array([10, 4, 22])
+    ground = np.array(T["ground"])
     col = np.where(y >= hy, ground, col)
     img = np.broadcast_to(col[:, None, :] if col.ndim == 2 else col, (H, W, 3)).astype(np.uint8).copy()
     im = Image.fromarray(img)
     # sun
     sun = Image.new("RGBA", (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(sun)
     cx, cy, r = W // 2, int(H * hy) - 40, 300
-    for i in range(r * 2):
+    for i in range(r * 2 if T["sun"] != "none" else 0):
         yy = cy - r + i
         t = i / (2 * r)
-        c = (int(255), int(220 - 150 * t), int(90 + 60 * t), 255)
+        a0, a1 = T["sun_top"], T["sun_bot"]
+        c = tuple(int(a0[k] + (a1[k] - a0[k]) * t) for k in range(3)) + (255,)
         half = int(math.sqrt(max(r * r - (yy - cy) ** 2, 0)))
-        if t > 0.5 and int((t - 0.5) * 40) % 3 == 0:  # stripes
+        if T["sun"] == "sun" and t > 0.5 and int((t - 0.5) * 40) % 3 == 0:  # stripes
             continue
         d.line([(cx - half, yy), (cx + half, yy)], fill=c)
     sun = sun.crop((0, 0, W, int(H * hy)))
@@ -53,12 +56,12 @@ def grid(im, t):
     d = ImageDraw.Draw(im)
     vx = W / 2
     for i in range(-8, 9):
-        d.line([(vx + i * 40, HY), (vx + i * 420, H)], fill=(255, 70, 170), width=3)
+        d.line([(vx + i * 40, HY), (vx + i * 420, H)], fill=T["grid"], width=3)
     off = (t * 0.8) % 1
     for k in range(14):
         z = (k + off) / 14
         yy = HY + (H - HY) * z ** 2.2
-        d.line([(0, yy), (W, yy)], fill=(255, 70, 170), width=3)
+        d.line([(0, yy), (W, yy)], fill=T["grid"], width=3)
 
 def text_layer(scene):
     dur, label, lines, sub = scene
@@ -72,7 +75,7 @@ def text_layer(scene):
         sizes.append((txt, f, col, bb))
     gap = 18
     total = sum(b[3] - b[1] for *_, b in sizes) + gap * (len(sizes) - 1)
-    y = int(H * 0.40 - total / 2)
+    y = int(H * T["ypos"] - total / 2)
     out = []
     for txt, f, col, bb in sizes:
         w = bb[2] - bb[0]; h = bb[3] - bb[1]
@@ -81,12 +84,12 @@ def text_layer(scene):
     # dark plate
     plate = Image.new("RGBA", (W, H), (0, 0, 0, 0)); pd = ImageDraw.Draw(plate)
     y0 = out[0][4][0] - 150; y1 = out[-1][4][1] + 190
-    pd.rounded_rectangle([40, y0, W - 40, y1], radius=50, fill=(8, 2, 20, 170))
+    pd.rounded_rectangle([40, y0, W - 40, y1], radius=T["radius"], fill=T["plate"] + (170,))
     layer.alpha_composite(plate)
     # label pill
     lf = ImageFont.truetype(FX, 46)
     lw = d.textlength(label, font=lf)
-    d.rounded_rectangle([(W - lw) / 2 - 34, y0 - 40, (W + lw) / 2 + 34, y0 + 40], radius=40, fill=PINK)
+    d.rounded_rectangle([(W - lw) / 2 - 34, y0 - 40, (W + lw) / 2 + 34, y0 + 40], radius=min(40, T["radius"]), fill=T["accent"])
     d.text((W / 2, y0), label, font=lf, fill=WHITE, anchor="mm")
     for txt, f, col, pos, _ in out:
         sh = Image.new("RGBA", (W, H), (0, 0, 0, 0)); sd = ImageDraw.Draw(sh)
@@ -120,7 +123,7 @@ def frame(i_scene, layer, t, gt):
     d = ImageDraw.Draw(im)
     # progress bar
     d.rectangle([0, 0, W, 16], fill=(0, 0, 0, 160))
-    d.rectangle([0, 0, int(W * gt / TOTAL), 16], fill=YEL)
+    d.rectangle([0, 0, int(W * gt / TOTAL), 16], fill=T["bar"])
     # flash at scene start
     if t < 0.08:
         fl = Image.new("RGBA", (W, H), (255, 255, 255, int(120 * (1 - t / 0.08))))

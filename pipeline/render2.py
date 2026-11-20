@@ -3,6 +3,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from timing import *
 import render as r1  # reuse background + scene texts + colors
+T = r1.T
 
 W, H = 1080, 1920
 SCENES = r1.SCENES
@@ -30,18 +31,18 @@ def build_outro():
     pad = 90; size = 560 + pad * 2
     im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     ring = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    ImageDraw.Draw(ring).ellipse([pad - 22, pad - 22, pad + 582, pad + 582], fill=r1.PINK + (255,))
+    ImageDraw.Draw(ring).ellipse([pad - 22, pad - 22, pad + 582, pad + 582], fill=T["accent"] + (255,))
     glow = ring.filter(ImageFilter.GaussianBlur(26)); im.alpha_composite(glow); im.alpha_composite(ring)
     im.paste(av, (pad, pad), mask)
     t1, _ = make_el("SÍGUEME", ImageFont.truetype(FB, 190), r1.WHITE)
-    t2, _ = make_el("@neonplaycanal", ImageFont.truetype(FB, 84), r1.PINK)
+    t2, _ = make_el("@neonplaycanal", ImageFont.truetype(FB, 84), T["accent"])
     subim, _ = make_el("noticias y trucos gamer cada día", ImageFont.truetype(FX, 54), (255, 255, 255), glow=False)
     y0, y1 = 280, 1480
     plate = Image.new("RGBA", (W - 80, y1 - y0), (0, 0, 0, 0))
-    ImageDraw.Draw(plate).rounded_rectangle([0, 0, plate.width - 1, plate.height - 1], radius=50, fill=(8, 2, 20, 175))
+    ImageDraw.Draw(plate).rounded_rectangle([0, 0, plate.width - 1, plate.height - 1], radius=T["radius"], fill=T["plate"] + (175,))
     lf = ImageFont.truetype(FX, 46); lw = ImageDraw.Draw(Image.new("RGBA", (1, 1))).textlength("NO TE LO PIERDAS", font=lf)
     pill = Image.new("RGBA", (int(lw + 68), 80), (0, 0, 0, 0)); pd = ImageDraw.Draw(pill)
-    pd.rounded_rectangle([0, 0, pill.width - 1, 79], radius=40, fill=r1.PINK)
+    pd.rounded_rectangle([0, 0, pill.width - 1, 79], radius=min(40, T["radius"]), fill=T["accent"])
     pd.text((pill.width / 2, 40), "NO TE LO PIERDAS", font=lf, fill=r1.WHITE, anchor="mm")
     return [(plate, W / 2, (y0 + y1) / 2, -0.01, "plate"), (pill, W / 2, y0, 0, "drop"),
             (im, W / 2, 700, 0, "pop"), (t1, W / 2, 1140, 1, "pop"), (t2, W / 2, 1290, 2, "pop"), (subim, W / 2, 1400, 3, "rise")]
@@ -59,17 +60,17 @@ def build(scene):
         items.append(make_el(txt, f, col))
     gap = 18
     total = sum(h for _, h in items) + gap * (len(items) - 1)
-    y = H * 0.40 - total / 2
+    y = H * T["ypos"] - total / 2
     els = []  # (img, cx, cy, appear_beat, kind)
     for k, (im, h) in enumerate(items):
         els.append((im, W / 2, y + h / 2, k, "pop"))
         y += h + gap
     y0 = els[0][2] - items[0][1] / 2 - 150; y1 = y - gap + 190
     plate = Image.new("RGBA", (W - 80, int(y1 - y0)), (0, 0, 0, 0))
-    ImageDraw.Draw(plate).rounded_rectangle([0, 0, plate.width - 1, plate.height - 1], radius=50, fill=(8, 2, 20, 175))
+    ImageDraw.Draw(plate).rounded_rectangle([0, 0, plate.width - 1, plate.height - 1], radius=T["radius"], fill=T["plate"] + (175,))
     lf = ImageFont.truetype(FX, 46); lw = d0.textlength(label, font=lf)
     pill = Image.new("RGBA", (int(lw + 68), 80), (0, 0, 0, 0)); pd = ImageDraw.Draw(pill)
-    pd.rounded_rectangle([0, 0, pill.width - 1, 79], radius=40, fill=r1.PINK)
+    pd.rounded_rectangle([0, 0, pill.width - 1, 79], radius=min(40, T["radius"]), fill=T["accent"])
     pd.text((pill.width / 2, 40), label, font=lf, fill=r1.WHITE, anchor="mm")
     subim, _ = make_el(sub, ImageFont.truetype(FX, 54), (255, 255, 255), glow=False)
     pre = [(plate, W / 2, (y0 + y1) / 2, -0.01, "plate"), (pill, W / 2, y0, 0, "drop")]
@@ -90,7 +91,7 @@ def place(canvas, im, cx, cy, s, a, dy=0):
 
 def grid(im, gt, pulse):
     d = ImageDraw.Draw(im); vx = W / 2
-    c = (255, int(70 + 120 * pulse), int(170 + 60 * pulse))
+    g0 = T["grid"]; c = tuple(min(255, int(g0[k] + (255 - g0[k]) * 0.55 * pulse)) for k in range(3))
     for i in range(-8, 9):
         d.line([(vx + i * 40, HY), (vx + i * 420, H)], fill=c, width=3)
     off = (gt / BEAT) % 1
@@ -143,7 +144,7 @@ def frame(sc_i, els, t, gt):
     if fl > 0: arr = (arr * (1 - fl) + 255 * fl).astype(np.uint8)
     # progress bar
     arr[0:16] = (arr[0:16] * 0.35).astype(np.uint8)
-    arr[0:16, :int(W * min(gt / TOTAL, 1))] = r1.YEL
+    arr[0:16, :int(W * min(gt / TOTAL, 1))] = T["bar"]
     return arr
 
 def scene_bounds(i):
