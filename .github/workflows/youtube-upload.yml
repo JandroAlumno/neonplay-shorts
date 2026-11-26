@@ -1,0 +1,25 @@
+name: Subir Short a YouTube
+
+# Solo lanzamiento manual (o por API) por alguien con permiso de escritura.
+on:
+  workflow_dispatch:
+    inputs:
+      manifest:
+        description: Ruta del manifiesto (uploads/nombre.json)
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Subir
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          MANIFEST: ${{ inputs.manifest }}
+        run: python3 pipeline/yt_upload.py "$MANIFEST"
